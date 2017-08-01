@@ -27,8 +27,10 @@ type Alert struct {
 	Search      search.Dict       `yaml:"search"`
 	Process     luautil.LuaRunner `yaml:"process"`
 
-	Cron                                     *cronexpr.Expression
-	SearchIndexTPL, SearchTypeTPL, SearchTPL *template.Template
+	Cron           *cronexpr.Expression
+	SearchIndexTPL *template.Template
+	SearchTypeTPL  *template.Template
+	SearchTPL      *template.Template
 }
 
 func templatizeHelper(i interface{}, lastErr error) (*template.Template, error) {

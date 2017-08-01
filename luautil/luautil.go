@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Lua performs some arbitrary lua code. The code can either be sourced from a
+// LuaRunner performs some arbitrary lua code. The code can either be sourced from a
 // file or from a raw string (Inline).
 type LuaRunner struct {
 	File   string `yaml:"lua_file"`
@@ -32,13 +32,14 @@ func (l *LuaRunner) Do(c context.Context) (interface{}, bool) {
 	} else if l.Inline != "" {
 		return RunInline(c, l.Inline)
 	}
-	return false, false
+	return nil, false
 }
 
 type cmd struct {
-	ctx              context.Context
-	filename, inline string
-	retCh            chan interface{}
+	ctx      context.Context
+	filename string
+	inline   string
+	retCh    chan interface{}
 }
 
 var cmdCh = make(chan cmd)
@@ -76,7 +77,7 @@ type runner struct {
 	id int // solely used to tell lua vms apart in logs
 	l  *lua.State
 
-	// Set of files and inline functions already in the global namespace
+	// Set of files and inline functions hashes already in the global namespace
 	m map[string]bool
 }
 
@@ -108,7 +109,7 @@ func (r *runner) spin() {
 	kv := log.Fields{
 		"runnerID": r.id,
 	}
-	log.WithFields(kv).Infoln("initializing lua vm")
+	log.WithFields(kv).Debugln("initializing lua vm")
 
 	if config.Opts.LuaInit != "" {
 		initKV := log.Fields{
@@ -130,7 +131,7 @@ func (r *runner) spin() {
 		if c.filename != "" {
 			kv["filename"] = c.filename
 			fnName, err = r.loadFile(c.filename)
-		} else {
+		} else if c.inline != "" {
 			kv["inline"] = shortInline(c.inline)
 			fnName, err = r.loadInline(c.inline)
 		}
@@ -148,7 +149,7 @@ func (r *runner) spin() {
 		r.l.SetGlobal("ctx")                     // set global variable "ctx" to ctx, pops it from stack
 		r.l.Global(fnName)                       // push function onto stack
 		r.l.Call(0, 1)                           // call function, pops function from stack, pushes return
-		c.retCh <- pullArbitraryValue(r.l, true) // send back the function return, also popping it
+		c.retCh <- PullArbitraryValue(r.l, true) // send back the function return, also popping it
 		// stack is now clean
 	}
 }
@@ -163,7 +164,7 @@ func (r *runner) loadFile(name string) (string, error) {
 		"runnerID": r.id,
 		"filename": name,
 		"fnName":   key,
-	}).Infoln("loading lua file")
+	}).Debugln("loading lua file")
 	f, err := os.Open(name)
 	if err != nil {
 		return "", err
@@ -189,7 +190,7 @@ func (r *runner) loadInline(code string) (string, error) {
 		"runnerID": r.id,
 		"inline":   shortInline(code),
 		"fnName":   key,
-	}).Infoln("loading lua inline")
+	}).Debugln("loading lua inline")
 	if err := r.l.Load(bytes.NewBufferString(code), key, "bt"); err != nil {
 		return "", err
 	}
@@ -205,7 +206,7 @@ func quickSha(s string) string {
 	return hex.EncodeToString(sh.Sum(nil))
 }
 
-func pullArbitraryValue(l *lua.State, remove bool) interface{} {
+func PullArbitraryValue(l *lua.State, remove bool) interface{} {
 	if remove {
 		defer l.Remove(-1)
 	}
@@ -229,8 +230,8 @@ func pullArbitraryValue(l *lua.State, remove bool) interface{} {
 		arrSize := 0
 		l.PushNil() // Next pops a value off the stack, so we add a dummy
 		for l.Next(-2) {
-			val := pullArbitraryValue(l, true)
-			key := pullArbitraryValue(l, false)
+			val := PullArbitraryValue(l, true)
+			key := PullArbitraryValue(l, false)
 
 			if keyi, ok := key.(int); ok {
 				if arrSize >= 0 && arrSize < keyi {
@@ -296,29 +297,27 @@ func pushArbitraryValue(l *lua.State, i interface{}) {
 	case []byte:
 		l.PushString(string(ii))
 	default:
-
 		v := reflect.ValueOf(i)
 		switch v.Kind() {
 		case reflect.Ptr:
 			pushArbitraryValue(l, v.Elem().Interface())
 
 		case reflect.Struct:
-			pushTableFromStruct(l, v)
+			PushTableFromStruct(l, v)
 
 		case reflect.Map:
-			pushTableFromMap(l, v)
+			PushTableFromMap(l, v)
 
 		case reflect.Slice:
-			pushTableFromSlice(l, v)
+			PushTableFromSlice(l, v)
 
 		default:
 			panic(fmt.Sprintf("unknown type being pushed onto lua stack: %T %+v", i, i))
 		}
-
 	}
 }
 
-func pushTableFromStruct(l *lua.State, v reflect.Value) {
+func PushTableFromStruct(l *lua.State, v reflect.Value) {
 	l.NewTable()
 	pushTableFromStructInner(l, v)
 }
@@ -349,7 +348,7 @@ func pushTableFromStructInner(l *lua.State, v reflect.Value) {
 	}
 }
 
-func pushTableFromMap(l *lua.State, v reflect.Value) {
+func PushTableFromMap(l *lua.State, v reflect.Value) {
 	l.NewTable()
 	for _, k := range v.MapKeys() {
 		pushArbitraryValue(l, k.Interface())
@@ -358,7 +357,7 @@ func pushTableFromMap(l *lua.State, v reflect.Value) {
 	}
 }
 
-func pushTableFromSlice(l *lua.State, v reflect.Value) {
+func PushTableFromSlice(l *lua.State, v reflect.Value) {
 	l.NewTable()
 	for j := 0; j < v.Len(); j++ {
 		pushArbitraryValue(l, j+1) // because lua is 1-indexed

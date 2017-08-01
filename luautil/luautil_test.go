@@ -37,7 +37,7 @@ func TestPullArbitrary(t *testing.T) {
 	`)
 	require.Nil(t, l.Load(b, "", "bt"))
 	l.Call(0, 1)
-	i := pullArbitraryValue(l, true)
+	i := luautil.PullArbitraryValue(l, true)
 	assert.Equal(t, map[string]interface{}{
 		"a": 1,
 		"b": 1.1,
@@ -50,7 +50,7 @@ func TestPullArbitrary(t *testing.T) {
 	}, i)
 }
 
-func testPushFrom(t *T, f func(*lua.State, reflect.Value), i interface{}, code string) {
+func testPushFrom(t *testing.T, f func(*lua.State, reflect.Value), i interface{}, code string) {
 	l := testLuaState()
 	initialStackSize := l.Top()
 
@@ -66,7 +66,7 @@ func testPushFrom(t *T, f func(*lua.State, reflect.Value), i interface{}, code s
 	assert.Equal(t, initialStackSize, l.Top())
 }
 
-func TestTableFromStruct(t *T) {
+func TestTableFromStruct(t *testing.T) {
 
 	type Foo struct {
 		A int
@@ -85,7 +85,7 @@ func TestTableFromStruct(t *T) {
 	}
 
 	i := Baz{Bar{Foo{1, "wat"}, true}, "wut", 5}
-	testPushFrom(t, pushTableFromStruct, i, `
+	testPushFrom(t, luautil.PushTableFromStruct, i, `
 		if ctx.C.A ~= 1 then return false end
 		if ctx.C.B ~= "wat" then return false end
 		if ctx.d ~= true then return false end
@@ -95,7 +95,7 @@ func TestTableFromStruct(t *T) {
 	`)
 }
 
-func TestTableFromMap(t *T) {
+func TestTableFromMap(t *testing.T) {
 	m := map[interface{}]interface{}{
 		"A": 1,
 		5:   "FOO",
@@ -103,7 +103,7 @@ func TestTableFromMap(t *T) {
 			"foo": "bar",
 		},
 	}
-	testPushFrom(t, pushTableFromMap, m, `
+	testPushFrom(t, luautil.PushTableFromMap, m, `
 		if ctx.A ~= 1 then return false end
 		if ctx[5] ~= "FOO" then return false end
 		if ctx[true].foo ~= "bar" then return false end
@@ -111,7 +111,7 @@ func TestTableFromMap(t *T) {
 	`)
 }
 
-func TestTableFromSlice(t *T) {
+func TestTableFromSlice(t *testing.T) {
 	s := []interface{}{
 		"foo",
 		true,
@@ -121,7 +121,7 @@ func TestTableFromSlice(t *T) {
 			"baz",
 		},
 	}
-	testPushFrom(t, pushTableFromSlice, s, `
+	testPushFrom(t, luautil.PushTableFromSlice, s, `
 		if ctx[1] ~= "foo" then return false end
 		if ctx[2] ~= true then return false end
 		if ctx[3] ~= 4 then return false end
@@ -131,7 +131,7 @@ func TestTableFromSlice(t *T) {
 	`)
 }
 
-func TestRun(t *T) {
+func TestRun(t *testing.T) {
 	ctx := context.Context{
 		Name: "foo",
 	}

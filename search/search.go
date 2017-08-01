@@ -29,7 +29,7 @@ type HitInfo struct {
 	Hits        []Hit   `json:"hits"`      // The actual documents matched
 }
 
-// Result describes the returned data from a search search
+// Result describes the returned data from a search
 type Result struct {
 	TookMS       uint64                          `json:"took"`      // Time search took to complete, in milliseconds
 	TimedOut     bool                            `json:"timed_out"` // Whether or not the search timed out

@@ -14,8 +14,8 @@
       if ctx.HitCount > 1 then
         return {
           {
-            type = "log",
-            message = "Performing action for alert " .. ctx.Name,
+            type = "slack",
+            text = "Performing action for alert " .. ctx.Name,
           }
         }
       end

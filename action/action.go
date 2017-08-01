@@ -116,7 +116,7 @@ type Slack struct {
 
 // Do performs the actual trigger request to the Slack api
 func (s *Slack) Do(c context.Context) error {
-	if config.Opts.SlackKey == "" {
+	if config.Opts.SlackWebhook == "" {
 		return errors.New("Slack key not set in config")
 	}
 
@@ -129,7 +129,7 @@ func (s *Slack) Do(c context.Context) error {
 		return err
 	}
 
-	r, err := http.NewRequest("POST", config.Opts.SlackKey, bytes.NewBuffer(bodyb))
+	r, err := http.NewRequest("POST", config.Opts.SlackWebhook, bytes.NewBuffer(bodyb))
 	if err != nil {
 		return err
 	}

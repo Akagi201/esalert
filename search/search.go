@@ -111,6 +111,10 @@ func Search(index, typ string, search interface{}) (Result, error) {
 		return Result{}, err
 	}
 
+	if config.Opts.ElasticSearchUser != "" && config.Opts.ElasticSearchPass != "" {
+		req.SetBasicAuth(config.Opts.ElasticSearchUser, config.Opts.ElasticSearchPass)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return Result{}, err
@@ -132,7 +136,7 @@ func Search(index, typ string, search interface{}) (Result, error) {
 			log.Errorf("could not unmarshal error body, %v", err)
 			return Result{}, err
 		}
-		return Result{}, errors.New(e.Error)
+		return Result{}, errors.New(fmt.Sprintf("HTTP status code: %v", resp.StatusCode))
 	}
 
 	var result Result

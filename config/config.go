@@ -15,8 +15,10 @@ import (
 
 // Opts configs
 var Opts struct {
-	AlertFileDir      string `long:"alerts" short:"a" description:"A yaml file, or directory with yaml files, containing alert definitions"`
-	ElasticSearchAddr string `long:"elasticsearch-addr" default:"127.0.0.1:9200" description:"Address to find an elasticsearch instance on"`
+	AlertFileDir      string `long:"alerts" short:"a" required:"true" description:"A yaml file, or directory with yaml files, containing alert definitions"`
+	ElasticSearchAddr string `long:"es-addr" default:"127.0.0.1:9200" description:"Address to find an elasticsearch instance on"`
+	ElasticSearchUser string `long:"es-user" default:"elastic" description:"Username for the elasticsearch"`
+	ElasticSearchPass string `long:"es-pass" default:"changeme" description:"Password for the elasticsearch"`
 	LuaInit           string `long:"lua-init" description:"If set the given lua script file will be executed at the initialization of every lua vm"`
 	LuaVMs            int    `long:"lua-vms" default:"1" description:"How many lua vms should be used. Each vm is completely independent of the other, and requests are executed on whatever vm is available at that moment. Allows lua scripts to not all be blocked on the same os thread"`
 	SlackKey          string `long:"slack-key" description:"Slack API key, required if using any Slack actions"`

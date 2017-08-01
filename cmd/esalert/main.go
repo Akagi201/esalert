@@ -13,10 +13,6 @@ import (
 )
 
 func main() {
-	if config.Opts.AlertFileDir == "" {
-		log.Fatalln("--alerts must be set")
-	}
-
 	fstat, err := os.Stat(config.Opts.AlertFileDir)
 	if err != nil {
 		log.WithFields(log.Fields{

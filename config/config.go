@@ -3,18 +3,18 @@
 package config
 
 import (
-	"fmt"
-	"os"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/Akagi201/utilgo/conflag"
 	flags "github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 )
 
 // Opts configs
 var Opts struct {
+	Conf              string `long:"conf" description:"esalert config file"`
 	AlertFileDir      string `long:"alerts" short:"a" required:"true" description:"A yaml file, or directory with yaml files, containing alert definitions"`
 	ElasticSearchAddr string `long:"es-addr" default:"127.0.0.1:9200" description:"Address to find an elasticsearch instance on"`
 	ElasticSearchUser string `long:"es-user" default:"elastic" description:"Username for the elasticsearch"`
@@ -31,13 +31,22 @@ func init() {
 }
 
 func init() {
-	parser := flags.NewParser(&Opts, flags.HelpFlag|flags.PassDoubleDash|flags.IgnoreUnknown)
+	parser := flags.NewParser(&Opts, flags.Default|flags.IgnoreUnknown)
 
-	_, err := parser.Parse()
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(-1)
+	parser.Parse()
+
+	if Opts.Conf != "" {
+		conflag.LongHyphen = true
+		conflag.BoolValue = false
+		args, err := conflag.ArgsFrom(Opts.Conf)
+		if err != nil {
+			panic(err)
+		}
+
+		parser.ParseArgs(args)
 	}
+
+	log.Infof("esalert opts: %+v", Opts)
 }
 
 func init() {

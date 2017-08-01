@@ -1,0 +1,4 @@
+alerts = "./esalert.d"
+es-addr = "10.0.6.22:9200"
+slack-webhook = "https://hooks.slack.com/services/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"
+force-run = "alert_error"

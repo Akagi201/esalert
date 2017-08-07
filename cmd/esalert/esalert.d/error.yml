@@ -1,5 +1,5 @@
 - name: alert_error
-  interval: "* * * * *"
+  interval: "*/5 * * * * *"
   search_index: "filebeat-*"
   search_type: "doc"
   search: {

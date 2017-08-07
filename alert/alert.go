@@ -11,7 +11,7 @@ import (
 	"github.com/Akagi201/esalert/context"
 	"github.com/Akagi201/esalert/luautil"
 	"github.com/Akagi201/esalert/search"
-	"github.com/gorhill/cronexpr"
+	"github.com/Akagi201/utilgo/jobber"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -27,7 +27,7 @@ type Alert struct {
 	Search      search.Dict       `yaml:"search"`
 	Process     luautil.LuaRunner `yaml:"process"`
 
-	Cron           *cronexpr.Expression
+	Jobber         *jobber.FullTimeSpec
 	SearchIndexTPL *template.Template
 	SearchTypeTPL  *template.Template
 	SearchTPL      *template.Template
@@ -62,11 +62,11 @@ func (a *Alert) Init() error {
 		return err
 	}
 
-	cron, err := cronexpr.Parse(a.Interval)
+	jb, err := jobber.ParseFullTimeSpec(a.Interval)
 	if err != nil {
 		return fmt.Errorf("parsing interval: %s", err)
 	}
-	a.Cron = cron
+	a.Jobber = jb
 
 	return nil
 }

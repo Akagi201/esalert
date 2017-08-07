@@ -84,8 +84,12 @@ func main() {
 func alertSpin(a alert.Alert) {
 	for {
 		now := time.Now()
-		next := a.Cron.Next(now)
-		time.Sleep(next.Sub(now))
-		go a.Run()
+		next := a.Jobber.Next(now)
+		if now == next {
+			go a.Run()
+			time.Sleep(time.Second)
+		} else {
+			time.Sleep(next.Sub(now))
+		}
 	}
 }

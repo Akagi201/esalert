@@ -53,7 +53,7 @@ A single alert has the following fields in its document (all are required):
 
 ```
 - name: something_unique
-  interval: "5 * * * *"
+  interval: "*/5 * * * * *"
   search_index: # see the search subsection
   search_type:  # see the search subsection
   search:       # see the search subsection
@@ -66,7 +66,7 @@ This is an arbitrary string to identify the alert. It must be unique amongst all
 
 #### interval
 
-A cron-style interval string describing when the search should be run and have the process run on the results.
+A [jobber-style](https://github.com/Akagi201/utilgo/tree/master/jobber) interval string describing when the search should be run and have the process run on the results.
 
 #### search
 

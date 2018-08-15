@@ -106,7 +106,11 @@ func Search(index, typ string, search interface{}) (Result, error) {
 		return Result{}, err
 	}
 
-	req, err := http.NewRequest("GET", u, bytes.NewBuffer(bodyReq))
+	log.WithFields(log.Fields{
+		"body": string(bodyReq),
+	}).Debugln("search query")
+
+	req, err := http.NewRequest(http.MethodPost, u, bytes.NewBuffer(bodyReq))
 	if err != nil {
 		return Result{}, err
 	}
@@ -114,6 +118,8 @@ func Search(index, typ string, search interface{}) (Result, error) {
 	if config.Opts.ElasticSearchUser != "" && config.Opts.ElasticSearchPass != "" {
 		req.SetBasicAuth(config.Opts.ElasticSearchUser, config.Opts.ElasticSearchPass)
 	}
+
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

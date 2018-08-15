@@ -46,16 +46,16 @@ func init() {
 		parser.ParseArgs(args)
 	}
 
-	log.Infof("esalert opts: %+v", Opts)
-}
-
-func init() {
-	if level, err := log.ParseLevel(strings.ToLower(Opts.LogLevel)); err != nil {
-		log.SetLevel(level)
-	}
-
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp:   true,
 		TimestampFormat: time.RFC3339,
 	})
+	level, err := log.ParseLevel(strings.ToLower(Opts.LogLevel))
+	if err == nil {
+		log.SetLevel(level)
+	} else {
+		log.Errorf("invalid log level: %s", Opts.LogLevel)
+	}
+
+	log.Infof("esalert opts: %+v", Opts)
 }

@@ -4,7 +4,7 @@ package alert
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"text/template"
 	"time"
 
 	"github.com/Akagi201/esalert/action"
@@ -25,6 +25,7 @@ type Alert struct {
 	SearchIndex string            `yaml:"search_index"`
 	SearchType  string            `yaml:"search_type"`
 	Search      search.Dict       `yaml:"search"`
+	SearchQuery string            `yaml:"search_query"`
 	Process     luautil.LuaRunner `yaml:"process"`
 
 	Jobber         *jobber.FullTimeSpec
@@ -57,7 +58,11 @@ func (a *Alert) Init() error {
 	var err error
 	a.SearchIndexTPL, err = templatizeHelper(a.SearchIndex, err)
 	a.SearchTypeTPL, err = templatizeHelper(a.SearchType, err)
-	a.SearchTPL, err = templatizeHelper(&a.Search, err)
+	if a.Search == nil {
+		a.SearchTPL, err = templatizeHelper(a.SearchQuery, err)
+	} else {
+		a.SearchTPL, err = templatizeHelper(&a.Search, err)
+	}
 	if err != nil {
 		return err
 	}
